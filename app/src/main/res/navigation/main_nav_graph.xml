@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main_nav_graph"
+    app:startDestination="@id/nav_home">
+
+    <fragment
+        android:id="@+id/nav_home"
+        android:name="com.example.enigma_schrzio_detetion.HomeFragment"
+        android:label="Home"
+        tools:layout="@layout/fragment_home" />
+
+    <fragment
+        android:id="@+id/nav_stats"
+        android:name="com.example.enigma_schrzio_detetion.StatisticsFragment"
+        android:label="Statistics"
+        tools:layout="@layout/fragment_statistics" />
+
+    <fragment
+        android:id="@+id/nav_history"
+        android:name="com.example.enigma_schrzio_detetion.HistoryFragment"
+        android:label="History"
+        tools:layout="@layout/fragment_history" />
+
+    <fragment
+        android:id="@+id/nav_consultant_list"
+        android:name="com.example.enigma_schrzio_detetion.ConsultantListFragment"
+        android:label="Consultant List"
+        tools:layout="@layout/fragment_consultant_list" />
+
+    <fragment
+        android:id="@+id/nav_profile"
+        android:name="com.example.enigma_schrzio_detetion.ProfileFragment"
+        android:label="Profile"
+        tools:layout="@layout/fragment_profile" />
+
+</navigation>
