@@ -11,20 +11,16 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.database.FirebaseDatabase;
 
-import java.text.SimpleDateFormat;
 import java.util.List;
-import java.util.Locale;
 
 public class DoctorRequestAdapter extends RecyclerView.Adapter<DoctorRequestAdapter.ViewHolder> {
 
     private List<AppointmentRequest> requestList;
-    private FirebaseFirestore db;
 
     public DoctorRequestAdapter(List<AppointmentRequest> requestList) {
         this.requestList = requestList;
-        this.db = FirebaseFirestore.getInstance();
     }
 
     @NonNull
@@ -38,44 +34,33 @@ public class DoctorRequestAdapter extends RecyclerView.Adapter<DoctorRequestAdap
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         AppointmentRequest request = requestList.get(position);
         holder.tvPatientName.setText(request.getPatientName());
-
-        if (request.getTimestamp() != null) {
-            SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy - hh:mm a", Locale.getDefault());
-            holder.tvDate.setText(sdf.format(request.getTimestamp()));
-        } else {
-            holder.tvDate.setText("Just now");
-        }
+        holder.tvDate.setText(request.getDate() != null ? request.getDate() : "Date not specified");
 
         String status = request.getStatus();
 
-        if ("pending".equals(status)) {
+        if ("Pending".equals(status)) {
             holder.llActions.setVisibility(View.VISIBLE);
-            holder.btnOpenChat.setVisibility(View.GONE);
+            holder.tvAcceptedLabel.setVisibility(View.GONE);
             holder.tvDeclinedMessage.setVisibility(View.GONE);
         } else if ("accepted".equals(status)) {
             holder.llActions.setVisibility(View.GONE);
-            holder.btnOpenChat.setVisibility(View.VISIBLE);
+            holder.tvAcceptedLabel.setVisibility(View.VISIBLE);
             holder.tvDeclinedMessage.setVisibility(View.GONE);
         } else if ("declined".equals(status)) {
             holder.llActions.setVisibility(View.GONE);
-            holder.btnOpenChat.setVisibility(View.GONE);
+            holder.tvAcceptedLabel.setVisibility(View.GONE);
             holder.tvDeclinedMessage.setVisibility(View.VISIBLE);
         }
 
         holder.btnAccept.setOnClickListener(v -> updateStatus(request, "accepted", holder.itemView));
         holder.btnDecline.setOnClickListener(v -> updateStatus(request, "declined", holder.itemView));
-
-        holder.btnOpenChat.setOnClickListener(v -> {
-            android.content.Intent intent = new android.content.Intent(v.getContext(), ChatActivity.class);
-            intent.putExtra("appointmentId", request.getId());
-            intent.putExtra("otherUserName", request.getPatientName());
-            v.getContext().startActivity(intent);
-        });
     }
 
     private void updateStatus(AppointmentRequest request, String newStatus, View contextView) {
-        db.collection("Appointments").document(request.getId())
-                .update("status", newStatus)
+        FirebaseDatabase.getInstance().getReference("appointments")
+                .child(request.getId())
+                .child("status")
+                .setValue(newStatus)
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(contextView.getContext(), "Request " + newStatus, Toast.LENGTH_SHORT).show();
                 })
@@ -90,19 +75,19 @@ public class DoctorRequestAdapter extends RecyclerView.Adapter<DoctorRequestAdap
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvPatientName, tvDate, tvDeclinedMessage;
+        TextView tvPatientName, tvDate, tvDeclinedMessage, tvAcceptedLabel;
         LinearLayout llActions;
-        Button btnAccept, btnDecline, btnOpenChat;
+        Button btnAccept, btnDecline;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             tvPatientName = itemView.findViewById(R.id.tvPatientName);
             tvDate = itemView.findViewById(R.id.tvDate);
             tvDeclinedMessage = itemView.findViewById(R.id.tvDeclinedMessage);
+            tvAcceptedLabel = itemView.findViewById(R.id.tvAcceptedLabel);
             llActions = itemView.findViewById(R.id.llActions);
             btnAccept = itemView.findViewById(R.id.btnAccept);
             btnDecline = itemView.findViewById(R.id.btnDecline);
-            btnOpenChat = itemView.findViewById(R.id.btnOpenChat);
         }
     }
 }

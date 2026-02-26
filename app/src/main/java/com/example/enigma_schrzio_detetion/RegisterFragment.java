@@ -14,7 +14,8 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.textfield.*;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.DatabaseReference;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,7 +38,7 @@ public class RegisterFragment extends Fragment {
 
     private OnSwitchToLoginListener listener;
     private FirebaseAuth mAuth;
-    private FirebaseFirestore db;
+    private DatabaseReference dbRef;
 
     @Nullable
     @Override
@@ -53,7 +54,7 @@ public class RegisterFragment extends Fragment {
             Bundle savedInstanceState) {
 
         mAuth = FirebaseAuth.getInstance();
-        db = FirebaseFirestore.getInstance();
+        dbRef = FirebaseDatabase.getInstance().getReference();
 
         etFullName = view.findViewById(R.id.etFullName);
         etAge = view.findViewById(R.id.etAge);
@@ -112,22 +113,33 @@ public class RegisterFragment extends Fragment {
 
         btnRegister.setEnabled(false);
 
-        String finalRole = role; // Need final for lambda
+        String finalRole = role;
         mAuth.createUserWithEmailAndPassword(email, pass)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         String uid = mAuth.getCurrentUser().getUid();
                         Map<String, Object> userMap = new HashMap<>();
-                        userMap.put("username", name);
-                        userMap.put("email", email);
-                        userMap.put("mobilenumber", mobile);
-                        userMap.put("age", age);
-                        userMap.put("password", pass); // Saving password as requested
-                        userMap.put("role", finalRole);
 
-                        db.collection("Users").document(uid).set(userMap)
+                        String collectionName;
+
+                        if ("doctor".equals(finalRole)) {
+                            collectionName = "doctors";
+                            userMap.put("name", name);
+                            userMap.put("experience", "5 years");
+                            userMap.put("hospital", "Not Specified");
+                            userMap.put("specialization", "General Physician");
+                        } else {
+                            collectionName = "patients";
+                            userMap.put("name", name);
+                            userMap.put("age", age);
+                            userMap.put("gender", "Not specified");
+                            userMap.put("medicalHistory", "None");
+                            userMap.put("assignedDoctor", "");
+                        }
+
+                        // Write to Firebase Realtime Database
+                        dbRef.child(collectionName).child(uid).setValue(userMap)
                                 .addOnSuccessListener(aVoid -> {
-                                    // Also save to SharedPreferences for ProfileFragment to use
                                     SharedPreferences prefs = requireActivity().getSharedPreferences("AppPrefs",
                                             Context.MODE_PRIVATE);
                                     SharedPreferences.Editor editor = prefs.edit();
@@ -135,12 +147,17 @@ public class RegisterFragment extends Fragment {
                                     editor.putString("userEmail", email);
                                     editor.putString("userAge", age);
                                     editor.putString("userMobile", mobile);
+                                    editor.putString("userRole", finalRole);
                                     editor.putBoolean("isLoggedIn", true);
                                     editor.apply();
 
                                     Toast.makeText(getContext(), "Account Created", Toast.LENGTH_SHORT).show();
 
-                                    startActivity(new Intent(getActivity(), MainActivity.class));
+                                    if ("doctor".equals(finalRole)) {
+                                        startActivity(new Intent(getActivity(), DoctorDashboardActivity.class));
+                                    } else {
+                                        startActivity(new Intent(getActivity(), MainActivity.class));
+                                    }
                                     requireActivity().finish();
                                 })
                                 .addOnFailureListener(e -> {

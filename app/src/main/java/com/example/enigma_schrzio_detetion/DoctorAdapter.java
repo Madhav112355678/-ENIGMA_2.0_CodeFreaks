@@ -10,7 +10,12 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.FirebaseDatabase;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class DoctorAdapter extends RecyclerView.Adapter<DoctorAdapter.DoctorViewHolder> {
 
@@ -39,7 +44,7 @@ public class DoctorAdapter extends RecyclerView.Adapter<DoctorAdapter.DoctorView
             holder.btnBookAppointment.setEnabled(false);
             holder.btnBookAppointment.setText("Requesting...");
 
-            com.google.firebase.auth.FirebaseAuth auth = com.google.firebase.auth.FirebaseAuth.getInstance();
+            FirebaseAuth auth = FirebaseAuth.getInstance();
             if (auth.getCurrentUser() == null) {
                 Toast.makeText(v.getContext(), "Please login first", Toast.LENGTH_SHORT).show();
                 holder.btnBookAppointment.setEnabled(true);
@@ -49,23 +54,28 @@ public class DoctorAdapter extends RecyclerView.Adapter<DoctorAdapter.DoctorView
 
             String patientId = auth.getCurrentUser().getUid();
 
-            // Get patient name from SharedPreferences
             android.content.SharedPreferences prefs = v.getContext().getSharedPreferences("AppPrefs",
                     android.content.Context.MODE_PRIVATE);
             String patientName = prefs.getString("userName", "Patient");
 
-            com.google.firebase.firestore.FirebaseFirestore db = com.google.firebase.firestore.FirebaseFirestore
-                    .getInstance();
+            // Generate unique appointment ID
+            String reqId = FirebaseDatabase.getInstance().getReference("appointments").push().getKey();
 
-            String reqId = db.collection("Appointments").document().getId();
-            AppointmentRequest request = new AppointmentRequest(
-                    reqId, patientId, patientName, doctor.getId(), doctor.getName(), "pending");
+            String currentDate = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                    .format(new java.util.Date());
 
-            db.collection("Appointments").document(reqId).set(request)
+            Map<String, Object> appointmentData = new HashMap<>();
+            appointmentData.put("date", currentDate);
+            appointmentData.put("doctorId", doctor.getId());
+            appointmentData.put("doctorName", doctor.getName());
+            appointmentData.put("patientId", patientId);
+            appointmentData.put("patientName", patientName);
+            appointmentData.put("status", "Pending");
+
+            FirebaseDatabase.getInstance().getReference("appointments").child(reqId).setValue(appointmentData)
                     .addOnSuccessListener(aVoid -> {
                         Toast.makeText(v.getContext(), "Appointment Requested", Toast.LENGTH_SHORT).show();
                         holder.btnBookAppointment.setText("Requested");
-                        // keep disabled
                     })
                     .addOnFailureListener(e -> {
                         Toast.makeText(v.getContext(), "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();

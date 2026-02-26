@@ -12,7 +12,9 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.textfield.*;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 public class LoginFragment extends Fragment {
 
@@ -22,7 +24,7 @@ public class LoginFragment extends Fragment {
     private TextView tvGoToRegister;
 
     private FirebaseAuth mAuth;
-    private FirebaseFirestore db;
+    private DatabaseReference dbRef;
 
     public static LoginFragment newInstance() {
         return new LoginFragment();
@@ -50,7 +52,7 @@ public class LoginFragment extends Fragment {
             Bundle savedInstanceState) {
 
         mAuth = FirebaseAuth.getInstance();
-        db = FirebaseFirestore.getInstance();
+        dbRef = FirebaseDatabase.getInstance().getReference();
 
         etEmail = view.findViewById(R.id.etEmail);
         etPassword = view.findViewById(R.id.etPassword);
@@ -90,49 +92,72 @@ public class LoginFragment extends Fragment {
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         String uid = mAuth.getCurrentUser().getUid();
-                        // Fetch user data to populate SharedPreferences for ProfileFragment
-                        db.collection("Users").document(uid).get()
-                                .addOnSuccessListener(documentSnapshot -> {
-                                    if (documentSnapshot.exists()) {
-                                        SharedPreferences prefs = requireActivity().getSharedPreferences("AppPrefs",
-                                                Context.MODE_PRIVATE);
-                                        SharedPreferences.Editor editor = prefs.edit();
-                                        editor.putString("userName", documentSnapshot.getString("username"));
-                                        editor.putString("userEmail", documentSnapshot.getString("email"));
-                                        editor.putString("userAge", documentSnapshot.getString("age"));
-                                        editor.putString("userMobile", documentSnapshot.getString("mobilenumber"));
-                                        String role = documentSnapshot.getString("role");
-                                        if (role == null)
-                                            role = "patient"; // default
-                                        editor.putString("userRole", role);
-                                        editor.putBoolean("isLoggedIn", true);
-                                        editor.apply();
-
-                                        Toast.makeText(getContext(), "Login Successful", Toast.LENGTH_SHORT).show();
-
-                                        if ("doctor".equals(role)) {
-                                            startActivity(new Intent(getActivity(), DoctorDashboardActivity.class));
-                                        } else {
-                                            startActivity(new Intent(getActivity(), MainActivity.class));
-                                        }
-                                        requireActivity().finish();
+                        // Try fetching from patients first
+                        dbRef.child("patients").child(uid).get()
+                                .addOnSuccessListener(snapshot -> {
+                                    if (snapshot.exists()) {
+                                        savePrefsAndNavigate(snapshot, "patient");
                                     } else {
-                                        Toast.makeText(getContext(), "User document does not exist", Toast.LENGTH_SHORT)
-                                                .show();
-                                        btnLogin.setEnabled(true);
+                                        // Not a patient, check doctors
+                                        dbRef.child("doctors").child(uid).get()
+                                                .addOnSuccessListener(docSnap -> {
+                                                    if (docSnap.exists()) {
+                                                        savePrefsAndNavigate(docSnap, "doctor");
+                                                    } else {
+                                                        Toast.makeText(getContext(), "User data not found",
+                                                                Toast.LENGTH_SHORT).show();
+                                                        btnLogin.setEnabled(true);
+                                                    }
+                                                })
+                                                .addOnFailureListener(e -> handleLoginFailure());
                                     }
                                 })
-                                .addOnFailureListener(e -> {
-                                    Toast.makeText(getContext(), "Could not fetch profile details", Toast.LENGTH_SHORT)
-                                            .show();
-                                    btnLogin.setEnabled(true);
-                                });
+                                .addOnFailureListener(e -> handleLoginFailure());
                     } else {
                         Toast.makeText(getContext(), "Login Failed: " + task.getException().getMessage(),
                                 Toast.LENGTH_LONG).show();
                         btnLogin.setEnabled(true);
                     }
                 });
+    }
+
+    private void savePrefsAndNavigate(DataSnapshot snapshot, String role) {
+        if (getActivity() == null)
+            return;
+
+        SharedPreferences prefs = getActivity().getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+
+        String username = snapshot.child("name").exists() ? snapshot.child("name").getValue(String.class) : "User";
+        editor.putString("userName", username);
+        editor.putString("userEmail", mAuth.getCurrentUser().getEmail());
+
+        if (snapshot.child("age").exists()) {
+            Object ageVal = snapshot.child("age").getValue();
+            editor.putString("userAge", ageVal != null ? String.valueOf(ageVal) : "N/A");
+        }
+
+        editor.putString("userRole", role);
+        editor.putBoolean("isLoggedIn", true);
+        editor.apply();
+
+        Toast.makeText(getContext(), "Login Successful", Toast.LENGTH_SHORT).show();
+
+        if ("doctor".equals(role)) {
+            startActivity(new Intent(getActivity(), DoctorDashboardActivity.class));
+        } else {
+            startActivity(new Intent(getActivity(), MainActivity.class));
+        }
+        getActivity().finish();
+    }
+
+    private void handleLoginFailure() {
+        if (getContext() != null) {
+            Toast.makeText(getContext(), "Could not fetch profile details", Toast.LENGTH_SHORT).show();
+        }
+        if (btnLogin != null) {
+            btnLogin.setEnabled(true);
+        }
     }
 
     private String get(TextInputEditText e) {
