@@ -75,6 +75,7 @@ public class PatientAppointmentsFragment extends Fragment {
                             request.setDoctorName(doc.child("doctorName").getValue(String.class));
                             request.setStatus(doc.child("status").getValue(String.class));
                             request.setDate(doc.child("date").getValue(String.class));
+                            request.setDoctorPhone(doc.child("doctorPhone").getValue(String.class));
                             appointmentList.add(request);
                         }
 

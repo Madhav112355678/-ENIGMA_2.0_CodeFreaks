@@ -122,12 +122,17 @@ public class RegisterFragment extends Fragment {
 
                         String collectionName;
 
+                        // Common fields for both roles
+                        userMap.put("email", email);
+                        userMap.put("mobilenumber", mobile);
+
                         if ("doctor".equals(finalRole)) {
                             collectionName = "doctors";
                             userMap.put("name", name);
                             userMap.put("experience", "5 years");
                             userMap.put("hospital", "Not Specified");
                             userMap.put("specialization", "General Physician");
+                            userMap.put("isAvailable", true);
                         } else {
                             collectionName = "patients";
                             userMap.put("name", name);

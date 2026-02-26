@@ -1,5 +1,7 @@
 package com.example.enigma_schrzio_detetion;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,7 +13,10 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.HashMap;
 import java.util.List;
@@ -58,29 +63,52 @@ public class DoctorAdapter extends RecyclerView.Adapter<DoctorAdapter.DoctorView
                     android.content.Context.MODE_PRIVATE);
             String patientName = prefs.getString("userName", "Patient");
 
-            // Generate unique appointment ID
-            String reqId = FirebaseDatabase.getInstance().getReference("appointments").push().getKey();
+            // First fetch the doctor's mobile number from RTDB, then create appointment
+            // with it
+            FirebaseDatabase.getInstance().getReference("doctors").child(doctor.getId())
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            String doctorPhone = "";
+                            if (snapshot.exists() && snapshot.child("mobilenumber").exists()) {
+                                doctorPhone = snapshot.child("mobilenumber").getValue(String.class);
+                            }
 
-            String currentDate = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
-                    .format(new java.util.Date());
+                            String reqId = FirebaseDatabase.getInstance().getReference("appointments").push().getKey();
+                            String currentDate = new java.text.SimpleDateFormat("yyyy-MM-dd",
+                                    java.util.Locale.getDefault())
+                                    .format(new java.util.Date());
 
-            Map<String, Object> appointmentData = new HashMap<>();
-            appointmentData.put("date", currentDate);
-            appointmentData.put("doctorId", doctor.getId());
-            appointmentData.put("doctorName", doctor.getName());
-            appointmentData.put("patientId", patientId);
-            appointmentData.put("patientName", patientName);
-            appointmentData.put("status", "Pending");
+                            Map<String, Object> appointmentData = new HashMap<>();
+                            appointmentData.put("date", currentDate);
+                            appointmentData.put("doctorId", doctor.getId());
+                            appointmentData.put("doctorName", doctor.getName());
+                            appointmentData.put("doctorPhone", doctorPhone != null ? doctorPhone : "");
+                            appointmentData.put("patientId", patientId);
+                            appointmentData.put("patientName", patientName);
+                            appointmentData.put("status", "Pending");
 
-            FirebaseDatabase.getInstance().getReference("appointments").child(reqId).setValue(appointmentData)
-                    .addOnSuccessListener(aVoid -> {
-                        Toast.makeText(v.getContext(), "Appointment Requested", Toast.LENGTH_SHORT).show();
-                        holder.btnBookAppointment.setText("Requested");
-                    })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(v.getContext(), "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                        holder.btnBookAppointment.setEnabled(true);
-                        holder.btnBookAppointment.setText("Book Appointment");
+                            FirebaseDatabase.getInstance().getReference("appointments").child(reqId)
+                                    .setValue(appointmentData)
+                                    .addOnSuccessListener(aVoid -> {
+                                        Toast.makeText(v.getContext(), "Appointment Requested", Toast.LENGTH_SHORT)
+                                                .show();
+                                        holder.btnBookAppointment.setText("Requested");
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        Toast.makeText(v.getContext(), "Failed: " + e.getMessage(), Toast.LENGTH_SHORT)
+                                                .show();
+                                        holder.btnBookAppointment.setEnabled(true);
+                                        holder.btnBookAppointment.setText("Book Appointment");
+                                    });
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+                            Toast.makeText(v.getContext(), "Error fetching doctor info", Toast.LENGTH_SHORT).show();
+                            holder.btnBookAppointment.setEnabled(true);
+                            holder.btnBookAppointment.setText("Book Appointment");
+                        }
                     });
         });
     }

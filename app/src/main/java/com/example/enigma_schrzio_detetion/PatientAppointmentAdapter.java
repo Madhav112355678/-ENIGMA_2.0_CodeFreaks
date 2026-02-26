@@ -13,11 +13,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-
 import java.util.List;
 
 public class PatientAppointmentAdapter extends RecyclerView.Adapter<PatientAppointmentAdapter.ViewHolder> {
@@ -49,39 +44,15 @@ public class PatientAppointmentAdapter extends RecyclerView.Adapter<PatientAppoi
             holder.tvStatus.setTextColor(Color.parseColor("#4CAF50"));
             holder.btnCallDoctor.setVisibility(View.VISIBLE);
 
-            // When patient taps Call, fetch doctor's mobile number from RTDB and open
-            // dialer
             holder.btnCallDoctor.setOnClickListener(v -> {
-                String doctorId = request.getDoctorId();
-                if (doctorId == null || doctorId.isEmpty()) {
-                    Toast.makeText(v.getContext(), "Doctor info not available", Toast.LENGTH_SHORT).show();
-                    return;
+                String phone = request.getDoctorPhone();
+                if (phone != null && !phone.isEmpty()) {
+                    Intent callIntent = new Intent(Intent.ACTION_DIAL);
+                    callIntent.setData(Uri.parse("tel:" + phone));
+                    v.getContext().startActivity(callIntent);
+                } else {
+                    Toast.makeText(v.getContext(), "Doctor phone number not available", Toast.LENGTH_SHORT).show();
                 }
-
-                FirebaseDatabase.getInstance().getReference("doctors").child(doctorId)
-                        .addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                if (snapshot.exists()) {
-                                    String phone = snapshot.child("mobilenumber").getValue(String.class);
-                                    if (phone != null && !phone.isEmpty()) {
-                                        Intent callIntent = new Intent(Intent.ACTION_DIAL);
-                                        callIntent.setData(Uri.parse("tel:" + phone));
-                                        v.getContext().startActivity(callIntent);
-                                    } else {
-                                        Toast.makeText(v.getContext(), "Doctor phone number not available",
-                                                Toast.LENGTH_SHORT).show();
-                                    }
-                                } else {
-                                    Toast.makeText(v.getContext(), "Doctor not found", Toast.LENGTH_SHORT).show();
-                                }
-                            }
-
-                            @Override
-                            public void onCancelled(@NonNull DatabaseError error) {
-                                Toast.makeText(v.getContext(), "Error fetching doctor info", Toast.LENGTH_SHORT).show();
-                            }
-                        });
             });
         } else if ("declined".equals(status)) {
             holder.tvStatus.setTextColor(Color.parseColor("#F44336"));

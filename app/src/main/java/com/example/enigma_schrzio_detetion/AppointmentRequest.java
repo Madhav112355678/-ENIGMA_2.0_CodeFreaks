@@ -8,6 +8,7 @@ public class AppointmentRequest {
     private String doctorName;
     private String status;
     private String date;
+    private String doctorPhone;
 
     public AppointmentRequest() {
     }
@@ -76,5 +77,13 @@ public class AppointmentRequest {
 
     public void setDate(String date) {
         this.date = date;
+    }
+
+    public String getDoctorPhone() {
+        return doctorPhone;
+    }
+
+    public void setDoctorPhone(String doctorPhone) {
+        this.doctorPhone = doctorPhone;
     }
 }
