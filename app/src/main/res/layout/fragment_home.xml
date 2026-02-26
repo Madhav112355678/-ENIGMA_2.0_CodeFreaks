@@ -77,7 +77,6 @@
                 android:orientation="horizontal"
                 android:padding="18dp">
 
-                <!-- Doctor Icon -->
                 <FrameLayout
                     android:layout_width="52dp"
                     android:layout_height="52dp"
@@ -153,7 +152,6 @@
                 android:orientation="horizontal"
                 android:padding="18dp">
 
-                <!-- Report Icon -->
                 <FrameLayout
                     android:layout_width="52dp"
                     android:layout_height="52dp"
@@ -228,7 +226,6 @@
                 android:orientation="horizontal"
                 android:padding="18dp">
 
-                <!-- Avatar Circle -->
                 <FrameLayout
                     android:layout_width="52dp"
                     android:layout_height="52dp"
