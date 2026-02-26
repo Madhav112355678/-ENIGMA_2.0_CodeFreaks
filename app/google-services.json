@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "34862108539",
+    "project_id": "schrziodetetion",
+    "storage_bucket": "schrziodetetion.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:34862108539:android:7072032dfb50e95f6ab7de",
+        "android_client_info": {
+          "package_name": "com.example.enigma_schrzio_detetion"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD1QpNHw74OJXWxJzDzCV-GtR9lfGj9Tdg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
