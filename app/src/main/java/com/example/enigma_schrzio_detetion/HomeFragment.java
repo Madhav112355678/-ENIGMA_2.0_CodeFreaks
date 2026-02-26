@@ -61,10 +61,10 @@ public class HomeFragment extends Fragment {
         CardView cardMedicalReport = view.findViewById(R.id.cardMedicalReport);
 
         cardConsult.setOnClickListener(
-                v -> Toast.makeText(getContext(), "Consult a Doctor — coming soon!", Toast.LENGTH_SHORT).show());
+                v -> androidx.navigation.Navigation.findNavController(v).navigate(R.id.nav_consultant_list));
 
         cardProfile.setOnClickListener(
-                v -> Toast.makeText(getContext(), "Profile — coming soon!", Toast.LENGTH_SHORT).show());
+                v -> androidx.navigation.Navigation.findNavController(v).navigate(R.id.nav_profile));
 
         cardMedicalReport.setOnClickListener(v -> openReportPicker());
     }

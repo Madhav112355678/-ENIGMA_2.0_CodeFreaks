@@ -104,10 +104,33 @@ public class LoginFragment extends Fragment {
         }
 
         if (valid) {
-            Intent intent = new Intent(getActivity(), MainActivity.class);
-            startActivity(intent);
+            // Bypass Firebase Auth for now
+            android.content.SharedPreferences prefs = requireActivity().getSharedPreferences("AppPrefs",
+                    android.content.Context.MODE_PRIVATE);
+            String existingName = prefs.getString("userName", null);
+
+            // If they haven't registered, create some dummy data so the profile works
+            if (existingName == null) {
+                android.content.SharedPreferences.Editor editor = prefs.edit();
+                editor.putString("userName", "Guest User");
+                editor.putString("userEmail", email);
+                editor.putString("userAge", "25");
+                editor.putString("userMobile", "0000000000");
+                editor.putBoolean("isLoggedIn", true);
+                editor.apply();
+                existingName = "Guest User";
+            } else {
+                // Just mark logged in
+                prefs.edit().putBoolean("isLoggedIn", true).apply();
+            }
+
             Toast.makeText(getContext(), getString(R.string.login_success), Toast.LENGTH_SHORT).show();
-            // TODO: implement actual Firebase / backend authentication here
+
+            // Navigate directly to MainActivity (Home)
+            Intent intent = new Intent(getActivity(), MainActivity.class);
+            intent.putExtra("userName", existingName);
+            startActivity(intent);
+            requireActivity().finish(); // Close auth activity
         }
     }
 }

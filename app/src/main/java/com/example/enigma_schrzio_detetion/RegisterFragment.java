@@ -157,12 +157,24 @@ public class RegisterFragment extends Fragment {
         }
 
         if (valid) {
+            // Bypass Firebase Auth for now - Save to SharedPreferences
+            android.content.SharedPreferences prefs = requireActivity().getSharedPreferences("AppPrefs",
+                    android.content.Context.MODE_PRIVATE);
+            android.content.SharedPreferences.Editor editor = prefs.edit();
+            editor.putString("userName", fullName);
+            editor.putString("userEmail", email);
+            editor.putString("userAge", ageStr);
+            editor.putString("userMobile", mobile);
+            editor.putBoolean("isLoggedIn", true);
+            editor.apply();
+
             Toast.makeText(getContext(), getString(R.string.register_success), Toast.LENGTH_SHORT).show();
-            // TODO: implement actual Firebase / backend registration here
-            // After success, optionally switch to Login tab:
-            if (switchListener != null) {
-                switchListener.onSwitchToLogin();
-            }
+
+            // Navigate directly to MainActivity (Home)
+            android.content.Intent intent = new android.content.Intent(getActivity(), MainActivity.class);
+            intent.putExtra("userName", fullName);
+            startActivity(intent);
+            requireActivity().finish(); // Close auth activity
         }
     }
 
