@@ -2,4 +2,29 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Green Theme Palette -->
+    <color name="green_primary">#2E7D32</color>
+    <color name="green_dark">#1B5E20</color>
+    <color name="green_medium">#388E3C</color>
+    <color name="green_light">#A5D6A7</color>
+    <color name="green_accent">#66BB6A</color>
+    <color name="green_surface">#E8F5E9</color>
+    <color name="green_tab_indicator">#FFFFFF</color>
+
+    <!-- Text Colors -->
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#616161</color>
+    <color name="text_hint">#9E9E9E</color>
+    <color name="text_on_green">#FFFFFF</color>
+    <color name="text_link">#2E7D32</color>
+
+    <!-- Input / Card -->
+    <color name="input_background">#FFFFFF</color>
+    <color name="input_stroke">#2E7D32</color>
+    <color name="card_background">#FFFFFF</color>
+    <color name="divider_color">#EEEEEE</color>
+
+    <!-- Error -->
+    <color name="error_color">#D32F2F</color>
 </resources>
