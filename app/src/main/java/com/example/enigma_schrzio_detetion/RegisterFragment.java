@@ -1,59 +1,59 @@
 package com.example.enigma_schrzio_detetion;
 
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Patterns;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.view.*;
+import android.widget.*;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import androidx.annotation.*;
 import androidx.fragment.app.Fragment;
 
-import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
+import com.google.android.material.textfield.*;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class RegisterFragment extends Fragment {
-
-    private TextInputLayout tilFullName, tilAge, tilEmail, tilMobile, tilPassword, tilConfirmPassword;
-    private TextInputEditText etFullName, etAge, etEmail, etMobile, etPassword, etConfirmPassword;
-    private Button btnRegister;
-    private TextView tvGoToLogin;
-
-    /** Callback interface so the activity can switch back to the Login tab */
-    public interface OnSwitchToLoginListener {
-        void onSwitchToLogin();
-    }
-
-    private OnSwitchToLoginListener switchListener;
-
     public static RegisterFragment newInstance() {
         return new RegisterFragment();
     }
 
+    private TextInputEditText etFullName, etAge,
+            etEmail, etMobile, etPassword, etConfirmPassword;
+
+    private TextInputLayout tilEmail, tilPassword, tilConfirmPassword;
+    private Button btnRegister;
+    private TextView tvGoToLogin;
+
+    public interface OnSwitchToLoginListener {
+        void onSwitchToLogin();
+    }
+
+    private OnSwitchToLoginListener listener;
+    private FirebaseAuth mAuth;
+    private FirebaseFirestore db;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
-            @Nullable ViewGroup container,
-            @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_register, container, false);
+            ViewGroup container,
+            Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_register,
+                container, false);
     }
 
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
+    public void onViewCreated(@NonNull View view,
+            Bundle savedInstanceState) {
 
-        // Bind views
-        tilFullName = view.findViewById(R.id.tilFullName);
-        tilAge = view.findViewById(R.id.tilAge);
-        tilEmail = view.findViewById(R.id.tilEmail);
-        tilMobile = view.findViewById(R.id.tilMobile);
-        tilPassword = view.findViewById(R.id.tilPassword);
-        tilConfirmPassword = view.findViewById(R.id.tilConfirmPassword);
+        mAuth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
 
         etFullName = view.findViewById(R.id.etFullName);
         etAge = view.findViewById(R.id.etAge);
@@ -62,111 +62,101 @@ public class RegisterFragment extends Fragment {
         etPassword = view.findViewById(R.id.etPassword);
         etConfirmPassword = view.findViewById(R.id.etConfirmPassword);
 
+        tilEmail = view.findViewById(R.id.tilEmail);
+        tilPassword = view.findViewById(R.id.tilPassword);
+        tilConfirmPassword = view.findViewById(R.id.tilConfirmPassword);
+
         btnRegister = view.findViewById(R.id.btnRegister);
         tvGoToLogin = view.findViewById(R.id.tvGoToLogin);
 
-        // Resolve parent activity listener
-        if (getActivity() instanceof OnSwitchToLoginListener) {
-            switchListener = (OnSwitchToLoginListener) getActivity();
-        }
+        listener = (OnSwitchToLoginListener) getActivity();
 
-        // Register button click
-        btnRegister.setOnClickListener(v -> validateAndRegister());
+        btnRegister.setOnClickListener(v -> registerUser());
 
-        // Switch to Login
         tvGoToLogin.setOnClickListener(v -> {
-            if (switchListener != null) {
-                switchListener.onSwitchToLogin();
-            }
+            if (listener != null)
+                listener.onSwitchToLogin();
         });
     }
 
-    private void validateAndRegister() {
-        boolean valid = true;
+    private void registerUser() {
 
-        String fullName = getText(etFullName);
-        String ageStr = getText(etAge);
-        String email = getText(etEmail);
-        String mobile = getText(etMobile);
-        String password = getText(etPassword);
-        String confirmPassword = getText(etConfirmPassword);
+        String name = get(etFullName);
+        String age = get(etAge);
+        String email = get(etEmail);
+        String mobile = get(etMobile);
+        String pass = get(etPassword);
+        String confirm = get(etConfirmPassword);
 
-        // -- Full Name --
-        tilFullName.setError(null);
-        if (TextUtils.isEmpty(fullName)) {
-            tilFullName.setError(getString(R.string.err_empty_name));
-            valid = false;
+        if (TextUtils.isEmpty(email)
+                || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            tilEmail.setError("Invalid Email");
+            return;
         }
 
-        // -- Age --
-        tilAge.setError(null);
-        if (TextUtils.isEmpty(ageStr)) {
-            tilAge.setError(getString(R.string.err_empty_age));
-            valid = false;
-        } else {
-            try {
-                int age = Integer.parseInt(ageStr);
-                if (age < 1 || age > 120) {
-                    tilAge.setError(getString(R.string.err_invalid_age));
-                    valid = false;
-                }
-            } catch (NumberFormatException e) {
-                tilAge.setError(getString(R.string.err_invalid_age));
-                valid = false;
-            }
+        if (pass.length() < 6) {
+            tilPassword.setError("Min 6 chars");
+            return;
         }
 
-        // -- Email --
-        tilEmail.setError(null);
-        if (TextUtils.isEmpty(email)) {
-            tilEmail.setError(getString(R.string.err_empty_email));
-            valid = false;
-        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            tilEmail.setError(getString(R.string.err_invalid_email));
-            valid = false;
+        if (!pass.equals(confirm)) {
+            tilConfirmPassword.setError("Password mismatch");
+            return;
         }
 
-        // -- Mobile --
-        tilMobile.setError(null);
-        if (TextUtils.isEmpty(mobile)) {
-            tilMobile.setError(getString(R.string.err_empty_mobile));
-            valid = false;
-        } else if (mobile.length() != 10 || !mobile.matches("\\d{10}")) {
-            tilMobile.setError(getString(R.string.err_invalid_mobile));
-            valid = false;
+        RadioGroup rgRole = getView().findViewById(R.id.rgRole);
+        String role = "patient";
+        if (rgRole.getCheckedRadioButtonId() == R.id.rbDoctor) {
+            role = "doctor";
         }
 
-        // -- Password --
-        tilPassword.setError(null);
-        if (TextUtils.isEmpty(password)) {
-            tilPassword.setError(getString(R.string.err_empty_password));
-            valid = false;
-        } else if (password.length() < 6) {
-            tilPassword.setError(getString(R.string.err_short_password));
-            valid = false;
-        }
+        btnRegister.setEnabled(false);
 
-        // -- Confirm Password --
-        tilConfirmPassword.setError(null);
-        if (TextUtils.isEmpty(confirmPassword)) {
-            tilConfirmPassword.setError(getString(R.string.err_empty_confirm));
-            valid = false;
-        } else if (!confirmPassword.equals(password)) {
-            tilConfirmPassword.setError(getString(R.string.err_password_mismatch));
-            valid = false;
-        }
+        String finalRole = role; // Need final for lambda
+        mAuth.createUserWithEmailAndPassword(email, pass)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        String uid = mAuth.getCurrentUser().getUid();
+                        Map<String, Object> userMap = new HashMap<>();
+                        userMap.put("username", name);
+                        userMap.put("email", email);
+                        userMap.put("mobilenumber", mobile);
+                        userMap.put("age", age);
+                        userMap.put("password", pass); // Saving password as requested
+                        userMap.put("role", finalRole);
 
-        if (valid) {
-            Toast.makeText(getContext(), getString(R.string.register_success), Toast.LENGTH_SHORT).show();
-            // TODO: implement actual Firebase / backend registration here
-            // After success, optionally switch to Login tab:
-            if (switchListener != null) {
-                switchListener.onSwitchToLogin();
-            }
-        }
+                        db.collection("Users").document(uid).set(userMap)
+                                .addOnSuccessListener(aVoid -> {
+                                    // Also save to SharedPreferences for ProfileFragment to use
+                                    SharedPreferences prefs = requireActivity().getSharedPreferences("AppPrefs",
+                                            Context.MODE_PRIVATE);
+                                    SharedPreferences.Editor editor = prefs.edit();
+                                    editor.putString("userName", name);
+                                    editor.putString("userEmail", email);
+                                    editor.putString("userAge", age);
+                                    editor.putString("userMobile", mobile);
+                                    editor.putBoolean("isLoggedIn", true);
+                                    editor.apply();
+
+                                    Toast.makeText(getContext(), "Account Created", Toast.LENGTH_SHORT).show();
+
+                                    startActivity(new Intent(getActivity(), MainActivity.class));
+                                    requireActivity().finish();
+                                })
+                                .addOnFailureListener(e -> {
+                                    Toast.makeText(getContext(), "Failed to save user data: " + e.getMessage(),
+                                            Toast.LENGTH_LONG).show();
+                                    btnRegister.setEnabled(true);
+                                });
+                    } else {
+                        Toast.makeText(getContext(), "Registration failed: " + task.getException().getMessage(),
+                                Toast.LENGTH_LONG).show();
+                        btnRegister.setEnabled(true);
+                    }
+                });
     }
 
-    private String getText(TextInputEditText et) {
-        return et.getText() != null ? et.getText().toString().trim() : "";
+    private String get(TextInputEditText e) {
+        return e.getText() == null ? "" : e.getText().toString().trim();
     }
 }

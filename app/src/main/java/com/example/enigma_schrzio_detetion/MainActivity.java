@@ -3,6 +3,7 @@ package com.example.enigma_schrzio_detetion;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.WindowManager;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -36,5 +37,11 @@ public class MainActivity extends AppCompatActivity {
         // ---- Top Bar Username (placeholder, swap for real user data) ----
         TextView tvTopUsername = findViewById(R.id.tvTopUsername);
         tvTopUsername.setText("User"); // TODO: replace with real username from auth/prefs
+        navController.navigate(navController.getGraph().getStartDestinationId());
+        bottomNav.setOnItemSelectedListener(item -> {
+            // This manually ensures navigation happens if IDs don't perfectly match
+            // or if you want to add custom logic (like haptics)
+            return NavigationUI.onNavDestinationSelected(item, navController);
+        });
     }
 }

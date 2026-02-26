@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "34862108539",
+    "firebase_url": "https://schrziodetetion-default-rtdb.firebaseio.com",
     "project_id": "schrziodetetion",
     "storage_bucket": "schrziodetetion.firebasestorage.app"
   },
@@ -12,7 +13,20 @@
           "package_name": "com.example.enigma_schrzio_detetion"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "34862108539-q3iaptn9pehmiklvmpemcpt8u66u78gs.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.enigma_schrzio_detetion",
+            "certificate_hash": "9867aa694d67eec18f2be34483dc9f24e036c649"
+          }
+        },
+        {
+          "client_id": "34862108539-m3luku6cs35fjfkqavt2bnbv4otah91f.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyD1QpNHw74OJXWxJzDzCV-GtR9lfGj9Tdg"
@@ -20,7 +34,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "34862108539-m3luku6cs35fjfkqavt2bnbv4otah91f.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

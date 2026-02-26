@@ -52,6 +52,10 @@ dependencies {
     implementation(libs.firebase.database)
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.storage)
+    implementation(libs.firebase.auth)
+
+    // Firebase App Check (debug provider for development)
+    implementation("com.google.firebase:firebase-appcheck-debug:18.0.0")
     implementation(libs.navigation.fragment)
     implementation(libs.navigation.ui)
 

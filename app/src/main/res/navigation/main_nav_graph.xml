@@ -58,4 +58,22 @@
         android:label="History"
         tools:layout="@layout/fragment_history" />
 
+    <fragment
+        android:id="@+id/nav_consultant_list"
+        android:name="com.example.enigma_schrzio_detetion.ConsultantListFragment"
+        android:label="Consultant List"
+        tools:layout="@layout/fragment_consultant_list" />
+
+    <fragment
+        android:id="@+id/nav_profile"
+        android:name="com.example.enigma_schrzio_detetion.ProfileFragment"
+        android:label="Profile"
+        tools:layout="@layout/fragment_profile" />
+
+    <fragment
+        android:id="@+id/nav_patient_appointments"
+        android:name="com.example.enigma_schrzio_detetion.PatientAppointmentsFragment"
+        android:label="My Appointments"
+        tools:layout="@layout/fragment_patient_appointments" />
+
 </navigation>

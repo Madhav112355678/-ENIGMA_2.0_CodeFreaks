@@ -7,6 +7,9 @@ import androidx.viewpager2.adapter.FragmentStateAdapter;
 
 public class AuthPagerAdapter extends FragmentStateAdapter {
 
+    public static RegisterFragment newInstance() {
+        return new RegisterFragment();
+    }
     public AuthPagerAdapter(@NonNull FragmentActivity fragmentActivity) {
         super(fragmentActivity);
     }
