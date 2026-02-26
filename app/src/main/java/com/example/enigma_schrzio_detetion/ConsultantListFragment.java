@@ -14,6 +14,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.widget.Toast;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+
 public class ConsultantListFragment extends Fragment {
 
     private RecyclerView recyclerView;
@@ -37,15 +41,44 @@ public class ConsultantListFragment extends Fragment {
         recyclerView = view.findViewById(R.id.recyclerViewDoctors);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        // Add Dummy Data
         doctorList = new ArrayList<>();
-        doctorList.add(new Doctor("1", "Dr. Sarah Jenkins", "Psychiatrist", "12 Years", 4.9f));
-        doctorList.add(new Doctor("2", "Dr. Michael Chen", "Clinical Psychologist", "8 Years", 4.7f));
-        doctorList.add(new Doctor("3", "Dr. Emily Davis", "Therapist", "5 Years", 4.5f));
-        doctorList.add(new Doctor("4", "Dr. Robert Wilson", "Neurologist", "15 Years", 4.8f));
-        doctorList.add(new Doctor("5", "Dr. Lisa Wong", "Child Psychologist", "10 Years", 4.6f));
-
         adapter = new DoctorAdapter(doctorList);
         recyclerView.setAdapter(adapter);
+
+        fetchDoctorsRealtime();
+    }
+
+    private void fetchDoctorsRealtime() {
+        FirebaseFirestore.getInstance().collection("Users")
+                .whereEqualTo("role", "doctor")
+                .addSnapshotListener((value, error) -> {
+                    if (error != null) {
+                        if (getContext() != null) {
+                            Toast.makeText(getContext(), "Failed to fetch doctors", Toast.LENGTH_SHORT).show();
+                        }
+                        return;
+                    }
+
+                    if (value != null) {
+                        doctorList.clear();
+                        for (QueryDocumentSnapshot doc : value) {
+                            String id = doc.getId();
+                            String name = doc.getString("username");
+                            if (name == null)
+                                name = "Unknown Doctor";
+
+                            // Using defaults for now since Registration doesn't ask for these
+                            String spec = doc.contains("specialization") ? doc.getString("specialization")
+                                    : "General Physician";
+                            String exp = doc.contains("experience") ? doc.getString("experience") : "5 Years";
+                            float rating = doc.contains("rating") && doc.getDouble("rating") != null
+                                    ? doc.getDouble("rating").floatValue()
+                                    : 4.5f;
+
+                            doctorList.add(new Doctor(id, name, spec, exp, rating));
+                        }
+                        adapter.notifyDataSetChanged();
+                    }
+                });
     }
 }

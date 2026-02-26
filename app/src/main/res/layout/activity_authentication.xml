@@ -19,14 +19,14 @@
         <FrameLayout
             android:layout_width="88dp"
             android:layout_height="88dp"
-            android:background="@drawable/bg_button_green"
             android:elevation="8dp">
 
             <ImageView
                 android:layout_width="56dp"
                 android:layout_height="56dp"
                 android:layout_gravity="center"
-                android:src="@drawable/ic_auth_logo"
+                android:src="@mipmap/ic_launcher_round"
+
                 android:contentDescription="App Logo" />
         </FrameLayout>
 

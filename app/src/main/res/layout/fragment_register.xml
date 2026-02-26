@@ -199,6 +199,43 @@
                 android:textSize="15sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- Role Selection -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Select Role"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/green_dark"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="8dp"/>
+
+        <RadioGroup
+            android:id="@+id/rgRole"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:checkedButton="@+id/rbPatient">
+
+            <RadioButton
+                android:id="@+id/rbPatient"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Patient"
+                android:textColor="@color/text_primary"
+                android:buttonTint="@color/green_primary"/>
+
+            <RadioButton
+                android:id="@+id/rbDoctor"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Doctor"
+                android:textColor="@color/text_primary"
+                android:buttonTint="@color/green_primary"/>
+        </RadioGroup>
+
         <!-- Register Button -->
         <Button
             android:id="@+id/btnRegister"

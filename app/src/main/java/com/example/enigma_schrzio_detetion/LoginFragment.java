@@ -1,136 +1,141 @@
 package com.example.enigma_schrzio_detetion;
 
-import android.content.Intent;
+import android.content.*;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Patterns;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.view.*;
+import android.widget.*;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import androidx.annotation.*;
 import androidx.fragment.app.Fragment;
 
-import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
+import com.google.android.material.textfield.*;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class LoginFragment extends Fragment {
 
-    private TextInputLayout tilEmail, tilPassword;
     private TextInputEditText etEmail, etPassword;
+    private TextInputLayout tilEmail, tilPassword;
     private Button btnLogin;
-    private TextView tvForgotPassword, tvGoToRegister;
+    private TextView tvGoToRegister;
 
-    /** Callback interface so the activity can switch to the Register tab */
-    public interface OnSwitchToRegisterListener {
-        void onSwitchToRegister();
-    }
-
-    private OnSwitchToRegisterListener switchListener;
+    private FirebaseAuth mAuth;
+    private FirebaseFirestore db;
 
     public static LoginFragment newInstance() {
         return new LoginFragment();
     }
 
+    public interface OnSwitchToRegisterListener {
+        void onSwitchToRegister();
+    }
+
+    private OnSwitchToRegisterListener listener;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
-            @Nullable ViewGroup container,
-            @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_login, container, false);
+            ViewGroup container,
+            Bundle savedInstanceState) {
+
+        return inflater.inflate(
+                R.layout.fragment_login,
+                container, false);
     }
 
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
+    public void onViewCreated(@NonNull View view,
+            Bundle savedInstanceState) {
 
-        // Bind views
-        tilEmail = view.findViewById(R.id.tilEmail);
-        tilPassword = view.findViewById(R.id.tilPassword);
+        mAuth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
+
         etEmail = view.findViewById(R.id.etEmail);
         etPassword = view.findViewById(R.id.etPassword);
+        tilEmail = view.findViewById(R.id.tilEmail);
+        tilPassword = view.findViewById(R.id.tilPassword);
         btnLogin = view.findViewById(R.id.btnLogin);
-        tvForgotPassword = view.findViewById(R.id.tvForgotPassword);
         tvGoToRegister = view.findViewById(R.id.tvGoToRegister);
 
-        // Resolve parent activity listener
-        if (getActivity() instanceof OnSwitchToRegisterListener) {
-            switchListener = (OnSwitchToRegisterListener) getActivity();
-        }
+        listener = (OnSwitchToRegisterListener) getActivity();
 
-        // Login button click
-        btnLogin.setOnClickListener(v -> validateAndLogin());
+        btnLogin.setOnClickListener(v -> loginUser());
 
-        // Forgot password
-        tvForgotPassword.setOnClickListener(
-                v -> Toast.makeText(getContext(), "Password reset coming soon!", Toast.LENGTH_SHORT).show());
-
-        // Switch to Register
         tvGoToRegister.setOnClickListener(v -> {
-            if (switchListener != null) {
-                switchListener.onSwitchToRegister();
-            }
+            if (listener != null)
+                listener.onSwitchToRegister();
         });
     }
 
-    private void validateAndLogin() {
-        boolean valid = true;
+    private void loginUser() {
 
-        String email = etEmail.getText() != null ? etEmail.getText().toString().trim() : "";
-        String password = etPassword.getText() != null ? etPassword.getText().toString().trim() : "";
+        String email = get(etEmail);
+        String pass = get(etPassword);
 
-        // Email
-        tilEmail.setError(null);
-        if (TextUtils.isEmpty(email)) {
-            tilEmail.setError(getString(R.string.err_empty_email));
-            valid = false;
-        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            tilEmail.setError(getString(R.string.err_invalid_email));
-            valid = false;
+        if (TextUtils.isEmpty(email)
+                || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            tilEmail.setError("Invalid Email");
+            return;
+        }
+        if (TextUtils.isEmpty(pass)) {
+            tilPassword.setError("Enter Password");
+            return;
         }
 
-        // Password
-        tilPassword.setError(null);
-        if (TextUtils.isEmpty(password)) {
-            tilPassword.setError(getString(R.string.err_empty_password));
-            valid = false;
-        } else if (password.length() < 6) {
-            tilPassword.setError(getString(R.string.err_short_password));
-            valid = false;
-        }
+        btnLogin.setEnabled(false);
 
-        if (valid) {
-            // Bypass Firebase Auth for now
-            android.content.SharedPreferences prefs = requireActivity().getSharedPreferences("AppPrefs",
-                    android.content.Context.MODE_PRIVATE);
-            String existingName = prefs.getString("userName", null);
+        mAuth.signInWithEmailAndPassword(email, pass)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        String uid = mAuth.getCurrentUser().getUid();
+                        // Fetch user data to populate SharedPreferences for ProfileFragment
+                        db.collection("Users").document(uid).get()
+                                .addOnSuccessListener(documentSnapshot -> {
+                                    if (documentSnapshot.exists()) {
+                                        SharedPreferences prefs = requireActivity().getSharedPreferences("AppPrefs",
+                                                Context.MODE_PRIVATE);
+                                        SharedPreferences.Editor editor = prefs.edit();
+                                        editor.putString("userName", documentSnapshot.getString("username"));
+                                        editor.putString("userEmail", documentSnapshot.getString("email"));
+                                        editor.putString("userAge", documentSnapshot.getString("age"));
+                                        editor.putString("userMobile", documentSnapshot.getString("mobilenumber"));
+                                        String role = documentSnapshot.getString("role");
+                                        if (role == null)
+                                            role = "patient"; // default
+                                        editor.putString("userRole", role);
+                                        editor.putBoolean("isLoggedIn", true);
+                                        editor.apply();
 
-            // If they haven't registered, create some dummy data so the profile works
-            if (existingName == null) {
-                android.content.SharedPreferences.Editor editor = prefs.edit();
-                editor.putString("userName", "Guest User");
-                editor.putString("userEmail", email);
-                editor.putString("userAge", "25");
-                editor.putString("userMobile", "0000000000");
-                editor.putBoolean("isLoggedIn", true);
-                editor.apply();
-                existingName = "Guest User";
-            } else {
-                // Just mark logged in
-                prefs.edit().putBoolean("isLoggedIn", true).apply();
-            }
+                                        Toast.makeText(getContext(), "Login Successful", Toast.LENGTH_SHORT).show();
 
-            Toast.makeText(getContext(), getString(R.string.login_success), Toast.LENGTH_SHORT).show();
+                                        if ("doctor".equals(role)) {
+                                            startActivity(new Intent(getActivity(), DoctorDashboardActivity.class));
+                                        } else {
+                                            startActivity(new Intent(getActivity(), MainActivity.class));
+                                        }
+                                        requireActivity().finish();
+                                    } else {
+                                        Toast.makeText(getContext(), "User document does not exist", Toast.LENGTH_SHORT)
+                                                .show();
+                                        btnLogin.setEnabled(true);
+                                    }
+                                })
+                                .addOnFailureListener(e -> {
+                                    Toast.makeText(getContext(), "Could not fetch profile details", Toast.LENGTH_SHORT)
+                                            .show();
+                                    btnLogin.setEnabled(true);
+                                });
+                    } else {
+                        Toast.makeText(getContext(), "Login Failed: " + task.getException().getMessage(),
+                                Toast.LENGTH_LONG).show();
+                        btnLogin.setEnabled(true);
+                    }
+                });
+    }
 
-            // Navigate directly to MainActivity (Home)
-            Intent intent = new Intent(getActivity(), MainActivity.class);
-            intent.putExtra("userName", existingName);
-            startActivity(intent);
-            requireActivity().finish(); // Close auth activity
-        }
+    private String get(TextInputEditText e) {
+        return e.getText() == null ? "" : e.getText().toString().trim();
     }
 }

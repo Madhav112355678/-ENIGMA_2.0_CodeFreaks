@@ -36,8 +36,42 @@ public class DoctorAdapter extends RecyclerView.Adapter<DoctorAdapter.DoctorView
         holder.tvDoctorRating.setText(String.valueOf(doctor.getRating()));
 
         holder.btnBookAppointment.setOnClickListener(v -> {
-            Toast.makeText(v.getContext(), "Booking appointment with " + doctor.getName(), Toast.LENGTH_SHORT).show();
-            // TODO: Navigate to appointment booking flow
+            holder.btnBookAppointment.setEnabled(false);
+            holder.btnBookAppointment.setText("Requesting...");
+
+            com.google.firebase.auth.FirebaseAuth auth = com.google.firebase.auth.FirebaseAuth.getInstance();
+            if (auth.getCurrentUser() == null) {
+                Toast.makeText(v.getContext(), "Please login first", Toast.LENGTH_SHORT).show();
+                holder.btnBookAppointment.setEnabled(true);
+                holder.btnBookAppointment.setText("Book Appointment");
+                return;
+            }
+
+            String patientId = auth.getCurrentUser().getUid();
+
+            // Get patient name from SharedPreferences
+            android.content.SharedPreferences prefs = v.getContext().getSharedPreferences("AppPrefs",
+                    android.content.Context.MODE_PRIVATE);
+            String patientName = prefs.getString("userName", "Patient");
+
+            com.google.firebase.firestore.FirebaseFirestore db = com.google.firebase.firestore.FirebaseFirestore
+                    .getInstance();
+
+            String reqId = db.collection("Appointments").document().getId();
+            AppointmentRequest request = new AppointmentRequest(
+                    reqId, patientId, patientName, doctor.getId(), doctor.getName(), "pending");
+
+            db.collection("Appointments").document(reqId).set(request)
+                    .addOnSuccessListener(aVoid -> {
+                        Toast.makeText(v.getContext(), "Appointment Requested", Toast.LENGTH_SHORT).show();
+                        holder.btnBookAppointment.setText("Requested");
+                        // keep disabled
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(v.getContext(), "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        holder.btnBookAppointment.setEnabled(true);
+                        holder.btnBookAppointment.setText("Book Appointment");
+                    });
         });
     }
 
