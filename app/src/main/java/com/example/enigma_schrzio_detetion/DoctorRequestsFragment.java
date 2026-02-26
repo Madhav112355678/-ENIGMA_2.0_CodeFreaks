@@ -23,49 +23,49 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PatientAppointmentsFragment extends Fragment {
+public class DoctorRequestsFragment extends Fragment {
 
     private RecyclerView recyclerView;
-    private TextView tvNoAppointments;
-    private PatientAppointmentAdapter adapter;
-    private List<AppointmentRequest> appointmentList;
+    private TextView tvNoRequests;
+    private DoctorRequestAdapter adapter;
+    private List<AppointmentRequest> requestList;
 
-    public PatientAppointmentsFragment() {
+    public DoctorRequestsFragment() {
     }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_patient_appointments, container, false);
+        return inflater.inflate(R.layout.fragment_doctor_requests, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        recyclerView = view.findViewById(R.id.rvPatientAppointments);
-        tvNoAppointments = view.findViewById(R.id.tvNoAppointments);
+        recyclerView = view.findViewById(R.id.rvDoctorRequests);
+        tvNoRequests = view.findViewById(R.id.tvNoRequests);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        appointmentList = new ArrayList<>();
-        adapter = new PatientAppointmentAdapter(appointmentList);
+        requestList = new ArrayList<>();
+        adapter = new DoctorRequestAdapter(requestList);
         recyclerView.setAdapter(adapter);
 
-        fetchAppointments();
+        fetchRequests();
     }
 
-    private void fetchAppointments() {
+    private void fetchRequests() {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null)
             return;
 
         FirebaseDatabase.getInstance().getReference("appointments")
-                .orderByChild("patientId").equalTo(user.getUid())
+                .orderByChild("doctorId").equalTo(user.getUid())
                 .addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        appointmentList.clear();
+                        requestList.clear();
                         for (DataSnapshot doc : snapshot.getChildren()) {
                             AppointmentRequest request = new AppointmentRequest();
                             request.setId(doc.getKey());
@@ -75,16 +75,16 @@ public class PatientAppointmentsFragment extends Fragment {
                             request.setDoctorName(doc.child("doctorName").getValue(String.class));
                             request.setStatus(doc.child("status").getValue(String.class));
                             request.setDate(doc.child("date").getValue(String.class));
-                            appointmentList.add(request);
+                            requestList.add(request);
                         }
 
                         adapter.notifyDataSetChanged();
 
-                        if (appointmentList.isEmpty()) {
-                            tvNoAppointments.setVisibility(View.VISIBLE);
+                        if (requestList.isEmpty()) {
+                            tvNoRequests.setVisibility(View.VISIBLE);
                             recyclerView.setVisibility(View.GONE);
                         } else {
-                            tvNoAppointments.setVisibility(View.GONE);
+                            tvNoRequests.setVisibility(View.GONE);
                             recyclerView.setVisibility(View.VISIBLE);
                         }
                     }
@@ -92,7 +92,7 @@ public class PatientAppointmentsFragment extends Fragment {
                     @Override
                     public void onCancelled(@NonNull DatabaseError error) {
                         if (getContext() != null) {
-                            Toast.makeText(getContext(), "Error fetching appointments", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getContext(), "Error fetching requests", Toast.LENGTH_SHORT).show();
                         }
                     }
                 });

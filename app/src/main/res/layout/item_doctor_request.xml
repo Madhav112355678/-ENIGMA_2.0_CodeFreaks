@@ -84,15 +84,17 @@
                 android:layout_marginStart="8dp"/>
         </LinearLayout>
 
-        <!-- Open Chat Button (Visible only if Accepted) -->
-        <Button
-            android:id="@+id/btnOpenChat"
-            android:layout_width="match_parent"
+        <!-- Accepted Label (Visible only if Accepted) -->
+        <TextView
+            android:id="@+id/tvAcceptedLabel"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Open Chat"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="@color/green_primary"
+            android:text="✓ Accepted"
+            android:textColor="#4CAF50"
+            android:textSize="16sp"
+            android:textStyle="bold"
             android:layout_marginTop="16dp"
+            android:layout_gravity="center"
             android:visibility="gone"/>
 
         <!-- Message indicating Declined -->

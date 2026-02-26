@@ -15,8 +15,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.widget.Toast;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 public class ConsultantListFragment extends Fragment {
 
@@ -49,35 +51,37 @@ public class ConsultantListFragment extends Fragment {
     }
 
     private void fetchDoctorsRealtime() {
-        FirebaseFirestore.getInstance().collection("Users")
-                .whereEqualTo("role", "doctor")
-                .addSnapshotListener((value, error) -> {
-                    if (error != null) {
-                        if (getContext() != null) {
-                            Toast.makeText(getContext(), "Failed to fetch doctors", Toast.LENGTH_SHORT).show();
-                        }
-                        return;
-                    }
-
-                    if (value != null) {
+        FirebaseDatabase.getInstance().getReference("doctors")
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
                         doctorList.clear();
-                        for (QueryDocumentSnapshot doc : value) {
-                            String id = doc.getId();
-                            String name = doc.getString("username");
+                        for (DataSnapshot doc : snapshot.getChildren()) {
+                            String id = doc.getKey();
+                            String name = doc.child("name").getValue(String.class);
                             if (name == null)
                                 name = "Unknown Doctor";
 
-                            // Using defaults for now since Registration doesn't ask for these
-                            String spec = doc.contains("specialization") ? doc.getString("specialization")
+                            String spec = doc.child("specialization").exists()
+                                    ? doc.child("specialization").getValue(String.class)
                                     : "General Physician";
-                            String exp = doc.contains("experience") ? doc.getString("experience") : "5 Years";
-                            float rating = doc.contains("rating") && doc.getDouble("rating") != null
-                                    ? doc.getDouble("rating").floatValue()
+                            String exp = doc.child("experience").exists()
+                                    ? doc.child("experience").getValue(String.class)
+                                    : "5 Years";
+                            float rating = doc.child("rating").exists() && doc.child("rating").getValue() != null
+                                    ? doc.child("rating").getValue(Float.class)
                                     : 4.5f;
 
                             doctorList.add(new Doctor(id, name, spec, exp, rating));
                         }
                         adapter.notifyDataSetChanged();
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        if (getContext() != null) {
+                            Toast.makeText(getContext(), "Failed to fetch doctors", Toast.LENGTH_SHORT).show();
+                        }
                     }
                 });
     }

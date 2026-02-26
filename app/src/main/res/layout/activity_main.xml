@@ -27,10 +27,10 @@
             android:layout_marginEnd="12dp">
 
             <ImageView
-                android:layout_width="100dp"
-                android:layout_height="100dp"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
                 android:layout_gravity="center"
-                android:src="@drawable/clevera_icon"
+                android:src="@drawable/logoapp"
                 android:contentDescription="app logo" />
         </FrameLayout>
 
