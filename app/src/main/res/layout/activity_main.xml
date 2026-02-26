@@ -27,11 +27,11 @@
             android:layout_marginEnd="12dp">
 
             <ImageView
-                android:layout_width="28dp"
-                android:layout_height="28dp"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
                 android:layout_gravity="center"
-                android:src="@drawable/ic_auth_logo"
-                android:contentDescription="App Logo" />
+                android:src="@drawable/clevera_icon"
+                android:contentDescription="app logo" />
         </FrameLayout>
 
         <!-- App Name -->
@@ -43,14 +43,14 @@
             android:letterSpacing="0.05"
             android:text="@string/app_display_name"
             android:textColor="#FFFFFF"
-            android:textSize="20sp"
+            android:textSize="22sp"
             android:textStyle="bold" />
 
         <!-- Username Chip -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="40dp"
-            android:background="@drawable/bg_white_card"
+            android:background="#00FFFFFF"
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:paddingHorizontal="12dp">
@@ -61,8 +61,8 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif-medium"
                 android:text="User"
-                android:textColor="@color/green_primary"
-                android:textSize="13sp"
+                android:textColor="@color/white"
+                android:textSize="15sp"
                 android:textStyle="bold" />
         </LinearLayout>
     </LinearLayout>
